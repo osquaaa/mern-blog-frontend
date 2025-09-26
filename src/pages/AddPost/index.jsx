@@ -1,17 +1,40 @@
-import React from 'react';
-import TextField from '@mui/material/TextField';
-import Paper from '@mui/material/Paper';
-import Button from '@mui/material/Button';
-import SimpleMDE from 'react-simplemde-editor';
+import React, { useRef } from "react";
+import TextField from "@mui/material/TextField";
+import Paper from "@mui/material/Paper";
+import Button from "@mui/material/Button";
+import SimpleMDE from "react-simplemde-editor";
 
-import 'easymde/dist/easymde.min.css';
-import styles from './AddPost.module.scss';
+import "easymde/dist/easymde.min.css";
+import styles from "./AddPost.module.scss";
+import { useSelector } from "react-redux";
+import { selectIsAuth } from "../../redux/slices/auth";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import axios from "../../axios";
 
 export const AddPost = () => {
-  const imageUrl = '';
-  const [value, setValue] = React.useState('');
+  const imageUrl = "";
+  const isAuth = useSelector(selectIsAuth);
+  const [value, setValue] = useState("");
+  const [title, setTitle] = useState("");
+  const [tags, setTags] = useState("");
+  const inputFileRef = useRef(null);
 
-  const handleChangeFile = () => {};
+  const navigate = useNavigate();
+
+  const handleChangeFile = async (event) => {
+    try {
+      const formData = new FormData();
+      const file = event.target.files[0];
+      formData.append("image", file);
+      const { data } = await axios.post("/upload", formData);
+
+      console.log(data);
+    } catch (err) {
+      console.warn(err);
+      alert("Ошибка при загрузке файла");
+    }
+  };
 
   const onClickRemoveImage = () => {};
 
@@ -22,31 +45,50 @@ export const AddPost = () => {
   const options = React.useMemo(
     () => ({
       spellChecker: false,
-      maxHeight: '400px',
+      maxHeight: "400px",
       autofocus: true,
-      placeholder: 'Введите текст...',
+      placeholder: "Введите текст...",
       status: false,
       autosave: {
         enabled: true,
         delay: 1000,
       },
     }),
-    [],
+    []
   );
+
+  useEffect(() => {
+    if (!window.localStorage.getItem("token") && !isAuth) {
+      navigate("/");
+    }
+  }, [navigate, isAuth]);
 
   return (
     <Paper style={{ padding: 30 }}>
-      <Button variant="outlined" size="large">
+      <Button
+        onClick={() => inputFileRef.current.click()}
+        variant="outlined"
+        size="large"
+      >
         Загрузить превью
       </Button>
-      <input type="file" onChange={handleChangeFile} hidden />
+      <input
+        ref={inputFileRef}
+        type="file"
+        onChange={handleChangeFile}
+        hidden
+      />
       {imageUrl && (
         <Button variant="contained" color="error" onClick={onClickRemoveImage}>
           Удалить
         </Button>
       )}
       {imageUrl && (
-        <img className={styles.image} src={`http://localhost:4444${imageUrl}`} alt="Uploaded" />
+        <img
+          className={styles.image}
+          src={`http://localhost:5001${imageUrl}`}
+          alt="Uploaded"
+        />
       )}
       <br />
       <br />
@@ -54,10 +96,24 @@ export const AddPost = () => {
         classes={{ root: styles.title }}
         variant="standard"
         placeholder="Заголовок статьи..."
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
         fullWidth
       />
-      <TextField classes={{ root: styles.tags }} variant="standard" placeholder="Тэги" fullWidth />
-      <SimpleMDE className={styles.editor} value={value} onChange={onChange} options={options} />
+      <TextField
+        classes={{ root: styles.tags }}
+        variant="standard"
+        placeholder="Тэги"
+        value={tags}
+        onChange={(e) => setTags(e.target.value)}
+        fullWidth
+      />
+      <SimpleMDE
+        className={styles.editor}
+        value={value}
+        onChange={onChange}
+        options={options}
+      />
       <div className={styles.buttons}>
         <Button size="large" variant="contained">
           Опубликовать

@@ -1,7 +1,9 @@
 import { createTheme } from "@mui/material/styles";
 
+const defaultTheme = createTheme();
+
 export const theme = createTheme({
-  shadows: ["none"],
+  shadows: defaultTheme.shadows, // берём все 25 дефолтных
   palette: {
     primary: {
       main: "#4361ee",
