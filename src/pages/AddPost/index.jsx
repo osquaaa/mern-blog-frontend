@@ -13,11 +13,12 @@ import { useEffect, useState } from "react";
 import axios from "../../axios";
 
 export const AddPost = () => {
-  const imageUrl = "";
   const isAuth = useSelector(selectIsAuth);
-  const [value, setValue] = useState("");
+  const [isLoading, setLoading] = useState(false);
+  const [text, setText] = useState("");
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
   const inputFileRef = useRef(null);
 
   const navigate = useNavigate();
@@ -29,18 +30,49 @@ export const AddPost = () => {
       formData.append("image", file);
       const { data } = await axios.post("/upload", formData);
 
-      console.log(data);
+      setImageUrl(data.url);
     } catch (err) {
       console.warn(err);
       alert("Ошибка при загрузке файла");
     }
   };
 
-  const onClickRemoveImage = () => {};
+  const onClickRemoveImage = async () => {
+    try {
+      const filename = imageUrl.split("/").pop();
+      await axios.delete(`/upload/${filename}`);
+      setImageUrl("");
+      if (inputFileRef.current) {
+        inputFileRef.current.value = "";
+      }
+    } catch (err) {
+      console.warn(err);
+      alert("Ошибка при удалении изображения");
+    }
+  };
 
   const onChange = React.useCallback((value) => {
-    setValue(value);
+    setText(value);
   }, []);
+
+  const onSubmit = async () => {
+    try {
+      setLoading(true);
+      const fields = {
+        title,
+        imageUrl,
+        tags,
+        text,
+      };
+      const { data } = await axios.post("/posts", fields);
+      const id = data._id;
+      navigate(`/posts/${id}`);
+      setLoading(false);
+    } catch (err) {
+      console.warn(err);
+      alert("Ошибка при создании статьи");
+    }
+  };
 
   const options = React.useMemo(
     () => ({
@@ -52,6 +84,7 @@ export const AddPost = () => {
       autosave: {
         enabled: true,
         delay: 1000,
+        uniqueId: "add-post-text",
       },
     }),
     []
@@ -79,16 +112,20 @@ export const AddPost = () => {
         hidden
       />
       {imageUrl && (
-        <Button variant="contained" color="error" onClick={onClickRemoveImage}>
-          Удалить
-        </Button>
-      )}
-      {imageUrl && (
-        <img
-          className={styles.image}
-          src={`http://localhost:5001${imageUrl}`}
-          alt="Uploaded"
-        />
+        <>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={onClickRemoveImage}
+          >
+            Удалить
+          </Button>
+          <img
+            className={styles.image}
+            src={`http://localhost:5000${imageUrl}`}
+            alt="Uploaded"
+          />
+        </>
       )}
       <br />
       <br />
@@ -110,12 +147,12 @@ export const AddPost = () => {
       />
       <SimpleMDE
         className={styles.editor}
-        value={value}
+        value={text}
         onChange={onChange}
         options={options}
       />
       <div className={styles.buttons}>
-        <Button size="large" variant="contained">
+        <Button size="large" variant="contained" onClick={onSubmit}>
           Опубликовать
         </Button>
         <a href="/">

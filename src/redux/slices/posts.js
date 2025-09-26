@@ -29,7 +29,7 @@ const postSlice = createSlice({
       state.posts.items = [];
       state.posts.status = "loading";
     },
-    [fetchPosts.fulfilled]: (state, action) => {
+    [fetchPosts.fulfilled]: (state, action) => { 
       state.posts.items = action.payload;
       state.posts.status = "loaded";
     },
