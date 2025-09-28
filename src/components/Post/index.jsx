@@ -33,8 +33,9 @@ export const Post = ({
   }
 
   const onClickRemove = () => {
-    dispatch(deletePost(_id));
-    dispatch(fetchPosts());
+    if (window.confirm("Вы действительно хотите удалить пост?")) {
+      dispatch(deletePost(_id));
+    }
   };
 
   return (

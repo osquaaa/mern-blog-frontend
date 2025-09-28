@@ -8,11 +8,12 @@ import "easymde/dist/easymde.min.css";
 import styles from "./AddPost.module.scss";
 import { useSelector } from "react-redux";
 import { selectIsAuth } from "../../redux/slices/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "../../axios";
 
 export const AddPost = () => {
+  const { id } = useParams();
   const isAuth = useSelector(selectIsAuth);
   const [isLoading, setLoading] = useState(false);
   const [text, setText] = useState("");
@@ -23,6 +24,7 @@ export const AddPost = () => {
 
   const navigate = useNavigate();
 
+  const isEditing = Boolean(id);
   const handleChangeFile = async (event) => {
     try {
       const formData = new FormData();
@@ -64,15 +66,37 @@ export const AddPost = () => {
         tags,
         text,
       };
-      const { data } = await axios.post("/posts", fields);
-      const id = data._id;
-      navigate(`/posts/${id}`);
+      const { data } = isEditing
+        ? await axios.patch(`/posts/${id}`, fields)
+        : await axios.post("/posts", fields);
+
+      const _id = isEditing ? id : data._id;
+
+      navigate(`/posts/${_id}`);
+
       setLoading(false);
     } catch (err) {
       console.warn(err);
       alert("Ошибка при создании статьи");
     }
   };
+
+  useEffect(() => {
+    if (id) {
+      axios
+        .get(`posts/${id}`)
+        .then(({ data }) => {
+          setTitle(data.title);
+          setText(data.text);
+          setImageUrl(data.imageUrl);
+          setTags(data.tags);
+        })
+        .catch((err) => {
+          console.warn(err);
+          alert("Ошибка при получении статьи");
+        });
+    }
+  }, []);
 
   const options = React.useMemo(
     () => ({
@@ -122,7 +146,7 @@ export const AddPost = () => {
           </Button>
           <img
             className={styles.image}
-            src={`http://localhost:5001${imageUrl}`}
+            src={`http://localhost:5000${imageUrl}`}
             alt="Uploaded"
           />
         </>
@@ -153,7 +177,7 @@ export const AddPost = () => {
       />
       <div className={styles.buttons}>
         <Button size="large" variant="contained" onClick={onSubmit}>
-          Опубликовать
+          {isEditing ? "Изменить" : "Опубликовать"}
         </Button>
         <a href="/">
           <Button size="large">Отмена</Button>

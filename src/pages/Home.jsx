@@ -5,28 +5,39 @@ import { useDispatch, useSelector } from "react-redux";
 import { Post } from "../components/Post";
 import { TagsBlock } from "../components/TagsBlock";
 import { CommentsBlock } from "../components/CommentsBlock";
-import { useEffect } from "react";
-import { fetchPosts, fetchTags } from "../redux/slices/posts";
+import { useEffect, useState } from "react";
+import { fetchPopular, fetchPosts, fetchTags } from "../redux/slices/posts";
 
 export const Home = () => {
   const dispatch = useDispatch();
   const userData = useSelector((state) => state.auth.data);
   const { posts, tags } = useSelector((state) => state.posts);
+  const [tabValue, setTabValue] = useState(0);
 
   const isPostsLoading = posts.status === "loading";
   const isTagsLoading = tags.status === "loading";
 
+  const handleChange = (_event, newValue) => {
+    setTabValue(newValue);
+  };
+
   useEffect(() => {
-    dispatch(fetchPosts());
+    if (tabValue === 0) {
+      dispatch(fetchPosts());
+    } else {
+      dispatch(fetchPopular());
+    }
+
     dispatch(fetchTags());
-  }, [dispatch]);
+  }, [dispatch, tabValue]);
 
   console.log(posts);
   return (
     <>
       <Tabs
         style={{ marginBottom: 15 }}
-        value={0}
+        value={tabValue}
+        onChange={handleChange}
         aria-label="basic tabs example"
       >
         <Tab label="Новые" />
@@ -42,7 +53,7 @@ export const Home = () => {
                 _id={obj._id}
                 title={obj.title}
                 imageUrl={
-                  obj.imageUrl ? `http://localhost:5001${obj.imageUrl}` : ""
+                  obj.imageUrl ? `http://localhost:5000${obj.imageUrl}` : ""
                 }
                 user={obj.user}
                 createdAt={obj.createdAt}

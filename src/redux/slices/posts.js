@@ -9,6 +9,11 @@ export const fetchTags = createAsyncThunk("posts/fetchTags", async () => {
   const { data } = await axios.get("/posts/tags");
   return data;
 });
+export const fetchPopular = createAsyncThunk("posts/fetchPopular", async () => {
+  const { data } = await axios.get("/posts/popular");
+  return data;
+});
+
 export const deletePost = createAsyncThunk(
   "posts/deletePost",
   async (id) => await axios.delete(`/posts/${id}`)
@@ -55,19 +60,23 @@ const postSlice = createSlice({
       state.tags.items = [];
       state.tags.status = "error";
     },
+    [fetchPopular.pending]: (state) => {
+      state.posts.items = [];
+      state.posts.status = "loading";
+    },
+    [fetchPopular.fulfilled]: (state, action) => {
+      state.posts.items = action.payload;
+      state.posts.status = "loaded";
+    },
+    [fetchPopular.rejected]: (state) => {
+      state.posts.items = [];
+      state.posts.status = "error";
+    },
     //Удаление поста
     [deletePost.pending]: (state, action) => {
       state.posts.items = state.posts.items.filter(
-        (obj) => obj._id === action.payload
+        (obj) => obj._id !== action.meta.arg
       );
-    },
-    [deletePost.fulfilled]: (state, action) => {
-      state.tags.items = action.payload;
-      state.tags.status = "loaded";
-    },
-    [deletePost.rejected]: (state) => {
-      state.tags.items = [];
-      state.tags.status = "error";
     },
   },
 });
