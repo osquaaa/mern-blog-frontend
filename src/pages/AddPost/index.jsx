@@ -122,7 +122,7 @@ export const AddPost = () => {
           </Button>
           <img
             className={styles.image}
-            src={`http://localhost:5000${imageUrl}`}
+            src={`http://localhost:5001${imageUrl}`}
             alt="Uploaded"
           />
         </>
